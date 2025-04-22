@@ -2,26 +2,34 @@ package com.suhas.NotesApp.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 @Service
 public class JwtService {
 
-    private String jwtSecret="SuhasHemanth1993";
+    private String jwtSecret="";
     private SecretKey secretKey;
 
     @PostConstruct
     public void init()
     {
+        try {
+            this.jwtSecret= Encoders.BASE64.encode(KeyGenerator.getInstance("HmacSHA256").generateKey().getEncoded());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
         byte[] bytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         this.secretKey=new SecretKeySpec(bytes,"HmacSHA256");
     }
@@ -29,7 +37,7 @@ public class JwtService {
     public String generateToken(String username) {
        return Jwts.builder().issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis()+1000*3*60*60))
-                .signWith(getSecretKey()).subject(username)
+                .signWith(secretKey).subject(username)
                 .compact();
 
     }
@@ -42,7 +50,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username=extractUserName(token);
-        return (username.equals(userDetails.getUsername()) && !checkIfNotExpired(token));
+        return (username.equals(userDetails.getUsername()) && checkIfNotExpired(token));
     }
 
     public String extractUserName(String token) {
