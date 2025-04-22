@@ -1,34 +1,33 @@
 package com.suhas.NotesApp.security;
 
-import com.suhas.NotesApp.model.Users;
+import com.suhas.NotesApp.model.User;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
+@AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
-
-    private final Users users;
-
-    public CustomUserDetails(Users users) {
-        this.users = users;
-    }
+    @Autowired
+    private User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(users.getUserRole().name()));
+        return List.of(new SimpleGrantedAuthority(user.getRole().name()));
     }
 
     @Override
     public String getPassword() {
-        return users.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return users.getEmail();
+        return user.getEmail();
     }
 
     @Override
